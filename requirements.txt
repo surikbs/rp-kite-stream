@@ -1,4 +1,6 @@
 kiteconnect
-confluent_kafka
+aiokafka
 python_dotenv
-flask
+aiohttp
+aiohttp_jinja2
+websockets
