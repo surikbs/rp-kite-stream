@@ -2,25 +2,24 @@ from flask import Flask, request, redirect
 from kiteconnect import KiteConnect
 
 # Replace with your Zerodha API key and API secret
-api_key = 'your_api_key'
-api_secret = 'your_api_secret'
+api_key = '123'
+api_secret = '123'
 
 # Your specified redirect URL (must match the one in your Zerodha developer app settings)
-redirect_url = 'http://localhost:5000/z/callback'
+redirect_url = 'http://localhost:8080/apis/broker/login/zerodha'
 
 # Initialize Flask app
 app = Flask(__name__)
 
-# Initiali\ze KiteConnect client
+# Initialize KiteConnect client
 kite = KiteConnect(api_key=api_key)
-
 @app.route('/')
 def index():
-    # Redirect the user to the Zerodha login page for authorization
-    login_url = kite.login_url(redirect_url)
+    # Build the Zerodha login URL with the redirect URL
+    login_url = f"https://kite.zerodha.com/connect/login?api_key={api_key}&v=3&redirect_url={redirect_url}"
     return redirect(login_url)
 
-@app.route('/z/callback')
+@app.route('/apis/broker/login/zerodha')
 def callback():
     # Obtain the request_token from the URL parameters
     request_token = request.args.get('request_token')
