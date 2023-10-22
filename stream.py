@@ -1,45 +1,36 @@
+from flask import Flask, request, redirect
 from kiteconnect import KiteConnect
-from confluent_kafka import Producer
-import json
 
-# Zerodha API credentials
+# Replace with your Zerodha API key and API secret
 api_key = 'your_api_key'
 api_secret = 'your_api_secret'
-access_token = 'your_access_token'
 
-# Kafka configuration
-kafka_config = {
-    'bootstrap.servers': 'localhost:9092',  # Replace with your Kafka broker(s)
-    'client.id': 'zerodha-producer'
-}
+# Your specified redirect URL (must match the one in your Zerodha developer app settings)
+redirect_url = 'http://localhost:5000/z/callback'
 
-# Create a Kafka producer instance
-kafka_producer = Producer(kafka_config)
+# Initialize Flask app
+app = Flask(__name__)
 
-# Create a Zerodha KiteConnect instance
+# Initiali\ze KiteConnect client
 kite = KiteConnect(api_key=api_key)
-kite.set_access_token(access_token)
 
-# Define the instrument token for the stock you want to track
-instrument_token = 256265  # Replace with the instrument token for your desired stock
+@app.route('/')
+def index():
+    # Redirect the user to the Zerodha login page for authorization
+    login_url = kite.login_url(redirect_url)
+    return redirect(login_url)
 
-# Kafka topic to publish data
-kafka_topic = 'stock_data'
+@app.route('/z/callback')
+def callback():
+    # Obtain the request_token from the URL parameters
+    request_token = request.args.get('request_token')
+    
+    # Exchange the request_token for an access_token
+    data = kite.generate_session(request_token, api_secret=api_secret)
+    access_token = data['access_token']
 
-# Callback function to handle Kafka delivery reports
-def delivery_report(err, msg):
-    if err is not None:
-        print('Message delivery failed: {}'.format(err))
-    else:
-        print('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
+    # Now you have the access_token, which you can use for API requests
+    return f'Access Token: {access_token}'
 
-# Fetch live data from Zerodha and send it to Kafka
-while True:
-    instrument_data = kite.ltp('NSE:' + str(instrument_token))
-    data_to_publish = json.dumps(instrument_data)
-
-    # Produce the data to the Kafka topic
-    kafka_producer.produce(kafka_topic, key=str(instrument_token), value=data_to_publish, callback=delivery_report)
-
-# Wait for any outstanding messages to be delivered and delivery reports to be received.
-kafka_producer.flush()
+if __name__ == '__main__':
+    app.run(debug=True)

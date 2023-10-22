@@ -1,2 +1,4 @@
 kiteconnect
 confluent_kafka
+python_dotenv
+flask
