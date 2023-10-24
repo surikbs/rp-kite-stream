@@ -1,6 +1,0 @@
-kiteconnect
-aiokafka
-python_dotenv
-aiohttp
-aiohttp_jinja2
-websockets
