@@ -1,0 +1,15 @@
+{
+  "name": "rp-kite-stream",
+  "version": "1.0.0",
+  "description": "This App is to stream kite ticks to redpanda",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
