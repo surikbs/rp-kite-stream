@@ -15,8 +15,8 @@ from alpaca.common.exceptions import APIError
 
 # Please change the following to your own PAPER api key and secret
 # You can get them from https://alpaca.markets/
-TRADE_API_KEY="PKHAAAIEBRVT4LMHENYD"
-TRADE_API_SECRET="b9KwkAX1juTqHnpIX2pzJwMf6R1OjZu8nDepWFbe"
+TRADE_API_KEY="x"
+TRADE_API_SECRET="x"
 
 #### We use paper environment for this example ####
 PAPER=True # Please do not modify this. This example is for paper trading only.
