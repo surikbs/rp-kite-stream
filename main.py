@@ -1,91 +1,50 @@
-import logging
-import os
 import time
-from datetime import datetime
 
-#import dummy
-import pandas as pd
-from alpaca_trade_api.stream import Stream
-
-#Pass in your keys and secret key
-API_KEY = "PK52CNPUUMSLVD89PRLJ"
-SECRET_KEY = "TtXrhSc9d9OjYr7s2ZcipxId1thtpuXhMGZZbH9A"
-
-#dummy_path = dummy.__file__
+import websocket
+import json
 
 
-async def trade_bars(bars):
-    temp_df = pd.DataFrame(
-        columns=["time", "open", "high", "low", "close", "volume", "tic", "vwap"]
-    )
+TRADE_API_KEY="x"
+TRADE_API_SECRET="x"
 
-    present_time = datetime.utcfromtimestamp(bars.timestamp / 10 ** 9).strftime("%Y-%m-%d %H:%M:%S")
-    temp_df["time"] = [present_time]
-
-    temp_df["open"] = [bars.open]
-    temp_df["high"] = [bars.high]
-    temp_df["low"] = [bars.low]
-    temp_df["close"] = [bars.close]
-    temp_df["volume"] = [bars.volume]
-    temp_df["tic"] = [bars.symbol]
-    temp_df["exchange"] = [bars.exchange]
-    temp_df["vwap"] = [bars.vwap]
-
-    temp_df.to_csv("bars.csv", mode="a", header=False)
-
-    print(bars)
-    # with open(dummy_path, "w") as fp:
-    #     fp.write(f"timestamp = '{datetime.now()}'")
+def on_message(ws, message):
+    print("Received message:", message)
 
 
-# def csv_handling(file_name: str, columns_list: list):
-#     if os.path.exists(file_name):
-#         try:
-#             trade_temp_df = pd.read_csv(file_name)
-#         except:
-#             print("The file doesn't exist, creating it")
-#             trade_temp_df = pd.DataFrame(columns=columns_list)
-#             trade_temp_df.to_csv(file_name)
-#         if trade_temp_df.empty:
-#             trade_temp_df = pd.DataFrame(columns=columns_list)
-#             trade_temp_df.to_csv(file_name)
-#         else:
-#             pass
-#     else:
-#         trade_temp_df = pd.DataFrame(columns=columns_list)
-#         trade_temp_df.to_csv(file_name)
+def on_error(ws, error):
+    print("Error:", error)
 
 
-def run_connection(stream, loop=None):
-    try:
-        stream.run()
-    except KeyboardInterrupt:
-        print("Interrupted execution by the user")
-        loop.run_until_complete(stream.stop_ws())
-        exit(0)
-    except Exception as e:
-        print(f'Exception from websocket connection: {e}')
-    finally:
-        print('Trying to re-establish connection')
-        time.sleep(3)
-        run_connection(stream)
+def on_close(ws):
+    print("### WebSocket connection closed ###")
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    stream = Stream(
-        API_KEY, SECRET_KEY, base_url="https://paper-api.alpaca.markets", raw_data=False,
-        data_feed='iex',
-        crypto_exchanges=['CBSE']
-    )
+def on_open(ws):
+    print("### WebSocket connection opened ###")
+    # Subscribe to relevant channels
+    subscribe_message = {
+        "action": "auth",
+        "key": TRADE_API_KEY,
+        "secret": TRADE_API_SECRET
+    }
+    ws.send(json.dumps(subscribe_message))
+    # Subscribe to channels you are interested in
+    ws.send(json.dumps({"action":"subscribe","trades":["BTC/USD"],"quotes":["ETH/USD"],"bars":["BCH/USD"]}))
 
-    # csv_handling(
-    #     "bars.csv",
-    #     columns_list=["time", "open", "high", "low", "close", "volume", "tic", "exchange", "vwap"],
-    # )
 
-    # stream.subscribe_bars(trade_bars,'TSLA')
-    stream.subscribe_crypto_bars(trade_bars, "ETHUSD")
-    stream.subscribe_crypto_bars(trade_bars, "BTCUSD")
-    run_connection(stream)
-    print("Complete")
+def run_websocket():
+    websocket.enableTrace(True)
+    ws = websocket.WebSocketApp("wss://stream.data.alpaca.markets/v1beta3/crypto/us",
+                                on_message=on_message,
+                                on_error=on_error,
+                                on_close=on_close)
+    ws.on_open = on_open
+    ws.run_forever()
+
+
+run_websocket()
+
+# if __name__ == "__main__":
+#     while True:
+#         run_websocket()
+#         time.sleep(10)  # Wait for 1 second before reconnecting
