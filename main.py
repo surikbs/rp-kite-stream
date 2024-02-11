@@ -1,11 +1,17 @@
+import os
 import time
-
 import websocket
 import json
 
+from dotenv import load_dotenv
 
-TRADE_API_KEY="x"
-TRADE_API_SECRET="x"
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the API key and secret from environment variables
+api_key = os.getenv("TRADE_API_KEY")
+secret_key = os.getenv("TRADE_API_SECRET")
+
 
 def on_message(ws, message):
     print("Received message:", message)
@@ -24,12 +30,11 @@ def on_open(ws):
     # Subscribe to relevant channels
     subscribe_message = {
         "action": "auth",
-        "key": TRADE_API_KEY,
-        "secret": TRADE_API_SECRET
+        "key": api_key,
+        "secret": secret_key
     }
     ws.send(json.dumps(subscribe_message))
-    # Subscribe to channels you are interested in
-    ws.send(json.dumps({"action":"subscribe","trades":["BTC/USD"],"quotes":["ETH/USD"],"bars":["BCH/USD"]}))
+    ws.send(json.dumps({"action": "subscribe", "bars": ["BTC/USD"]}))
 
 
 def run_websocket():
