@@ -2,11 +2,18 @@ import os
 import time
 import websocket
 import json
-
+from confluent_kafka import Producer
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Kafka configuration
+KAFKA_BOOTSTRAP_SERVERS = 'localhost:9092'
+KAFKA_TOPIC = 'BTCUSD'
+
+# Kafka producer
+kafka_producer = Producer({'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS})
 
 # Access the API key and secret from environment variables
 api_key = os.getenv("TRADE_API_KEY")
@@ -14,8 +21,9 @@ secret_key = os.getenv("TRADE_API_SECRET")
 
 
 def on_message(ws, message):
-    print("Received message:", message)
-
+    #print("Received message:", message)
+    # Send message to Kafka topic
+    kafka_producer.produce(KAFKA_TOPIC, message)
 
 def on_error(ws, error):
     print("Error:", error)
@@ -26,7 +34,7 @@ def on_close(ws):
 
 
 def on_open(ws):
-    print("### WebSocket connection opened ###")
+    #print("### WebSocket connection opened ###")
     # Subscribe to relevant channels
     subscribe_message = {
         "action": "auth",
